@@ -1,61 +1,71 @@
+from typing import Any, List
+
+
 class Node:
-    def __init__(self, key, value, hash_value):
-        self.key = key
-        self.value = value
-        self.hash = hash_value
+    def __init__(self, key: Any, value: Any, hash_value: int) -> None:
+        self.key: Any = key
+        self.value: Any = value
+        self.hash_value: int = hash_value
 
 
 class Dictionary:
-    def __init__(self, capacity = 2):
+    def __init__(self, capacity: int = 8) -> None:
         if capacity < 1:
-            capacity = 2
+            capacity = 8
 
+        self.capacity: int = capacity
+        self.size: int = 0
+        self.load_factor: float = 0.75
+        self.buckets: List[List[Node]] = [[] for _ in range(self.capacity)]
 
-        self.capacity = capacity
-        self.size = 0
-        self.load_factor = 0.75
-        self.buckets = [ [] for _ in range(self.capacity)]
-
-    def _get_index(self, key_hash):
+    def _get_bucket_index(self, key_hash: int) -> int:
         return key_hash % self.capacity
 
-    def __setitem__(self, key, value):
-        key_hash = hash(key)
-        index = self._get_index(key_hash)
+    def __setitem__(self, key: Any, value: Any) -> None:
+        try:
+            key_hash = hash(key)
+        except TypeError:
+            raise TypeError(f"unhashable key: {key}")
+
+        index = self._get_bucket_index(key_hash)
         bucket = self.buckets[index]
 
         for node in bucket:
-            if node.hash == key_hash and node.key == key:
+            if node.hash_value == key_hash and node.key == key:
                 node.value = value
                 return
+
         bucket.append(Node(key, value, key_hash))
         self.size += 1
 
         if self.size / self.capacity > self.load_factor:
             self._resize()
 
-    def __getitem__(self, key):
-        key_hash = hash(key)
-        index = self._get_index(key_hash)
+    def __getitem__(self, key: Any) -> Any:
+        try:
+            key_hash = hash(key)
+        except TypeError:
+            raise TypeError(f"unhashable key: {key}")
+
+        index = self._get_bucket_index(key_hash)
         bucket = self.buckets[index]
 
         for node in bucket:
-            if node.hash == key_hash and node.key == key:
+            if node.hash_value == key_hash and node.key == key:
                 return node.value
 
-        raise KeyError(f"Key {key} not found")
+        raise KeyError(key)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return self.size
 
-    def _resize(self):
+    def _resize(self) -> None:
         old_buckets = self.buckets
+
         self.capacity *= 2
-        self.buckets = [ [] for _ in range(self.capacity)]
+        self.buckets = [[] for _ in range(self.capacity)]
         self.size = 0
 
         for bucket in old_buckets:
             for node in bucket:
                 self[node.key] = node.value
-
-
