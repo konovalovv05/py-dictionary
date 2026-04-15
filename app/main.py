@@ -3,14 +3,14 @@ from typing import Any, List
 
 class Node:
     def __init__(self, key: Any, value: Any, hash_value: int) -> None:
-        self.key: Any = key
-        self.value: Any = value
-        self.hash_value: int = hash_value
+        self.key = key
+        self.value = value
+        self.hash_value = hash_value
 
 
 class Dictionary:
     def __init__(self, capacity: int = 8) -> None:
-        if capacity < 1:
+        if capacity <= 0:
             capacity = 8
 
         self.capacity: int = capacity
@@ -25,13 +25,15 @@ class Dictionary:
         try:
             key_hash = hash(key)
         except TypeError:
-            raise TypeError(f"unhashable key: {key}")
+            raise TypeError(
+                f"unhashable type: '{type(key).__name__}'"
+            )
 
         index = self._get_bucket_index(key_hash)
         bucket = self.buckets[index]
 
         for node in bucket:
-            if node.hash_value == key_hash and node.key == key:
+            if node.key == key:
                 node.value = value
                 return
 
@@ -45,13 +47,15 @@ class Dictionary:
         try:
             key_hash = hash(key)
         except TypeError:
-            raise TypeError(f"unhashable key: {key}")
+            raise TypeError(
+                f"unhashable type: '{type(key).__name__}'"
+            )
 
         index = self._get_bucket_index(key_hash)
         bucket = self.buckets[index]
 
         for node in bucket:
-            if node.hash_value == key_hash and node.key == key:
+            if node.key == key:
                 return node.value
 
         raise KeyError(key)
@@ -68,4 +72,6 @@ class Dictionary:
 
         for bucket in old_buckets:
             for node in bucket:
-                self[node.key] = node.value
+                index = self._get_bucket_index(node.hash_value)
+                self.buckets[index].append(node)
+                self.size += 1
